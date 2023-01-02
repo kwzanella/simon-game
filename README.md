@@ -16,4 +16,5 @@ Simple simon game written in C++ using the Arduino framework and PlatformIO for 
 | Red LED        | 1           |
 | Passive Buzzer | 1           |
 | 220 Ω Resistor | 4           |
+| Breadboard     | 1           |
 | Arduino Uno    | 1           | 
