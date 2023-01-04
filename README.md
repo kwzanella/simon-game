@@ -7,7 +7,7 @@ Simple simon game written in C++ using the Arduino framework and PlatformIO for 
 ![Hardware implementation on Arduino Uno](imgs/simon-game-arduino.png "Hardware implementation on Arduino Uno")
 
 ### List of Components
-| Component      | Quantity |
+| Component      | Quantity    |
 | -----------    | ----------- |
 | Push-button    | 4           |
 | Green LED      | 1           |
