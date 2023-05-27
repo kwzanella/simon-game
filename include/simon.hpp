@@ -2,9 +2,9 @@
 
 #include "button.h"
 
-#define NUM_BUTTONS 4
-#define MAX_ACTIONS 100
-#define DEBOUNCE_TIME   75  // debounce time to avoid input noise
+#define NUM_BUTTONS   4
+#define MAX_ACTIONS   100
+#define DEBOUNCE_TIME 75  // debounce time to avoid input noise
 
 class SimonGame {
 private:
@@ -15,6 +15,7 @@ private:
     button* buttons;            // available buttons
 
     button* wait_button_press();
+    void reset();
     void play_previous_actions();
     void play_next_action();
 

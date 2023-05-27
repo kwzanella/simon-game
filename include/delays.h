@@ -1,5 +1,7 @@
 #pragma once
 
+// all delays below are given in ms (millisecond)
+
 #define USER_GAME_DELAY 300  // time between user interaction (button press) and game playing previous actions
 #define STARTUP_DELAY   350  // amount of time for a single tone to play in startup
 #define ACTION_DELAY    250  // time between blinks and tones plays

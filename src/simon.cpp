@@ -1,4 +1,5 @@
 #include <Arduino.h>
+
 #include "simon.hpp"
 #include "helpers.h"
 #include "delays.h"
@@ -13,9 +14,13 @@ SimonGame::SimonGame(button* buttons) :
 {}
 
 SimonGame::~SimonGame() {
+    this->reset();
+}
+
+void SimonGame::reset() {
     delete[] previous_actions;
     action = 0;
-    pressed = nullptr;
+    pressed = NULL;
     is_correct = false;
 }
 
@@ -52,7 +57,7 @@ void SimonGame::start() {
 }
 
 void SimonGame::restart() {
-    this->~SimonGame();
+    this->reset();
     this->previous_actions = new button* [MAX_ACTIONS];
     
     this->start();
