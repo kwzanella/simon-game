@@ -1,64 +1,32 @@
 #include <Arduino.h>
+
 #include "simon.hpp"
+#include "helpers.h"
+#include "delays.h"
+#include "button.h"
 
-button buttons[4] = {
-    (button){R_BUTTON, R_LED, R_TONE},  // red
-    (button){Y_BUTTON, Y_LED, Y_TONE},  // yellow
-    (button){B_BUTTON, B_LED, B_TONE},  // blue
-    (button){G_BUTTON, G_LED, G_TONE}   // green
-};  // stores available buttons
+SimonGame::SimonGame(button* buttons) :
+    previous_actions(new button* [MAX_ACTIONS]),
+    action(0),
+    pressed(nullptr),
+    is_correct(false),
+    buttons(buttons)
+{}
 
-button** previous_actions = new button*[MAX_ACTIONS];  // stores adress of previously pressed buttons in heap
-
-unsigned short action = 0;  // controls previous_actions indexing
-button* pressed = NULL;     // controls pressed button
-bool is_correct = false;    // controls if button pressed is correct
-
-void startup_sound() {
-    tone(BUZZER, R_TONE);
-    delay(STARTUP_DELAY);
-
-    tone(BUZZER, Y_TONE);
-    delay(STARTUP_DELAY);
-
-    tone(BUZZER, B_TONE);
-    delay(STARTUP_DELAY);
-
-    tone(BUZZER, G_TONE);
-    delay(STARTUP_DELAY);
-
-    noTone(BUZZER);  // buzzer continues to play without this
+SimonGame::~SimonGame() {
+    this->reset();
 }
 
-void incorrect_press_sound() {
-    tone(BUZZER, R_TONE);
-    delay(INCORRECT_DELAY);
-
-    tone(BUZZER, Y_TONE);
-    delay(INCORRECT_DELAY);
-
-    tone(BUZZER, R_TONE);
-    delay(INCORRECT_DELAY);
-
-    noTone(BUZZER);
+void SimonGame::reset() {
+    delete[] previous_actions;
+    action = 0;
+    pressed = NULL;
+    is_correct = false;
 }
 
-void play_tone(double t) {
-    tone(BUZZER, t);
-    delay(ACTION_DELAY);
-    noTone(BUZZER);
-}
-
-void blink(int led_pin) {
-    digitalWrite(led_pin, HIGH);
-    delay(ACTION_DELAY);
-
-    digitalWrite(led_pin, LOW);
-}
-
-button* wait_button_press() {
+button* SimonGame::wait_button_press() {
     while(1) {
-        for(int button=0; button < NUM_BUTTONS; button++) {
+        for(uint8_t button=0; button < NUM_BUTTONS; ++button) {
             if (digitalRead(buttons[button].button) == LOW) {
                 delay(DEBOUNCE_TIME);
                 return &buttons[button];
@@ -67,50 +35,40 @@ button* wait_button_press() {
     }
 }
 
-// play previous actions
-void simon_previous() {
-    for(unsigned short i=0; i <= action; i++) {
+void SimonGame::play_next_action() {
+    randomSeed(analogRead(0));  // needed for better working of random()
+    previous_actions[action] = &buttons[random(0, NUM_BUTTONS)];  // store variable adress
+
+    this->play_previous_actions();  // plays previous actions
+    ++action;
+}
+
+void SimonGame::play_previous_actions() {
+    for(uint8_t i=0; i <= action; ++i) {
         blink(previous_actions[i]->led);
         play_tone(previous_actions[i]->m_tone);
     }
 }
 
-// choose next action
-void simon_next() {
-    randomSeed(analogRead(0));  // needed for better working of random()
-    previous_actions[action] = &buttons[random(0, NUM_BUTTONS)];  // store variable adress
-
-    simon_previous();  // plays previous actions
-    action++;
-}
-
-void simon_start() {
+void SimonGame::start() {
     startup_sound();
     delay(START_DELAY);
-    simon_next();
+    this->play_next_action();
 }
 
-// reset array and variables and start the game
-void simon_restart() {
-    delete[] previous_actions;
-    previous_actions = new button*[MAX_ACTIONS];
-
-    action = 0;
-    pressed = NULL;
-    is_correct = false;
+void SimonGame::restart() {
+    this->reset();
+    this->previous_actions = new button* [MAX_ACTIONS];
     
-    simon_start();
+    this->start();
 }
 
-// simon game main function
-void simon_game() {
+void SimonGame::game() {
     if (action == MAX_ACTIONS - 1) {  // cannot go further
-        delete[] previous_actions;
-        previous_actions = NULL;
         exit(0);
     }
 
-    for(unsigned short i=0; i < action; i++) {  // checks if user presses correct sequence of buttons
+    for(uint8_t i=0; i < action; ++i) {  // checks if user presses correct sequence of buttons
         pressed = wait_button_press();
         
         blink(pressed->led);
@@ -127,32 +85,12 @@ void simon_game() {
 
     if (is_correct) {  // only gets here if all buttons are pressed correctly
         delay(USER_GAME_DELAY);
-        simon_next();
+        this->play_next_action();
     }
     else {  // only gets here if one button is pressed incorrectly
         delay(USER_GAME_DELAY);
         incorrect_press_sound();
         delay(RESTART_DELAY);
-        simon_restart();
+        this->restart();
     }
-}
-
-void setup() {
-    pinMode(R_LED, OUTPUT);
-    pinMode(Y_LED, OUTPUT);
-    pinMode(B_LED, OUTPUT);
-    pinMode(G_LED, OUTPUT);
-
-    pinMode(R_BUTTON, INPUT_PULLUP);
-    pinMode(Y_BUTTON, INPUT_PULLUP);
-    pinMode(B_BUTTON, INPUT_PULLUP);
-    pinMode(G_BUTTON, INPUT_PULLUP);
-
-    pinMode(BUZZER, OUTPUT);
-
-    simon_start();
-}
-
-void loop() {
-    simon_game();
 }
